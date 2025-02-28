@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# media and static files
+media/
+staticfiles/
+!media/IMG_6899.jpg
+!media/LeonardHeadshot.jpg
+
+# qodo
+.qodo/

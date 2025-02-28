@@ -1,0 +1,280 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SESS Admin Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'sess_admin_portal/css/style.css' %}">
+    {% block head %}{% endblock %}
+</head>
+<body data-bs-theme="dark">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'home' %}" class="sidebar-brand">
+                    <span class="fw-bold text-primary">SESS Inc.</span>
+                </a>
+                <button class="btn btn-link d-md-none sidebar-close" id="sidebarClose">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="user-info mb-4">
+                    <div class="user-avatar bg-primary rounded-circle mb-2">
+                        {% if employee.profile_picture %}
+                            <img src="{{ employee.profile_picture.image.url }}" alt="Profile" class="img-fluid rounded-circle w-100 h-100 object-fit-cover">
+                        {% else %}
+                            <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </div>
+                    <div class="user-details">
+                        <h6 class="mb-0">Welcome, {{ employee.first_name }}</h6>
+                        <small class="text-muted">{{ employee.role }}</small>
+                    </div>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <div class="sidebar-nav-item">
+                        <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/home/' or request.path == '/' %}active{% endif %}">
+                            <i class="bi bi-house-door"></i>
+                            <span>Home</span>
+                        </a>
+                    </div>
+                    
+                    <div class="sidebar-nav-item">
+                        <a href="{% url 'client_management' %}" class="sidebar-link {% if 'client_management' in request.path %}active{% endif %}">
+                            <i class="bi bi-people"></i>
+                            <span>Client Management</span>
+                        </a>
+                    </div>
+                    
+                    <div class="sidebar-nav-item">
+                        <a href="#employeeSubmenu" data-bs-toggle="collapse" class="sidebar-link dropdown-toggle {% if 'timesheet' in request.path %}active{% endif %}">
+                            <i class="bi bi-briefcase"></i>
+                            <span>Employee Tools</span>
+                        </a>
+                        <div class="collapse {% if 'timesheet' in request.path %}show{% endif %}" id="employeeSubmenu">
+                            <div class="sidebar-submenu">
+                                <a href="{% url 'timesheet_management' %}" class="sidebar-sublink {% if 'timesheet_management' in request.path %}active{% endif %}">
+                                    <i class="bi bi-clock"></i>
+                                    <span>Submit Timesheet</span>
+                                </a>
+                                <a href="{% url 'timesheet' %}" class="sidebar-sublink {% if request.path == '/timesheet/' %}active{% endif %}">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>Timesheet Summary</span>
+                                </a>
+                                <a href="{% url 'pto_management' %}" class="sidebar-sublink">
+                                    <i class="bi bi-calendar-minus"></i>
+                                    <span>PTO Management</span>
+                                </a>
+                                <a href="{% url 'client_reports' %}" class="sidebar-sublink">
+                                    <i class="bi bi-calendar-minus"></i>
+                                    <span>Client Reports</span>
+                                </a>
+                                <a href="{% url 'employee_requests' %}" class="sidebar-sublink">
+                                    <i class="bi bi-calendar-minus"></i>
+                                    <span>Submit Request</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.is_staff or user.is_superuser %}
+    <div class="sidebar-nav-item mt-4">
+        <span class="sidebar-nav-header">Admin Tools</span>
+    </div>
+    
+    <div class="sidebar-nav-item">
+        <a href="{% url 'manage_announcements' %}" class="sidebar-link {% if 'announcements' in request.path %}active{% endif %}">
+            <i class="bi bi-megaphone"></i>
+            <span>Announcements</span>
+        </a>
+    </div>
+    
+    <div class="sidebar-nav-item">
+        <a href="{% url 'admin_timesheets' %}" class="sidebar-link {% if 'admin_timesheets' in request.path %}active{% endif %}">
+            <i class="bi bi-file-earmark-check"></i>
+            <span>Timesheet Admin</span>
+        </a>
+    </div>
+
+    <div class="sidebar-nav-item">
+        <a href="{% url 'admin_pto' %}" class="sidebar-link {% if 'admin_timesheets' in request.path %}active{% endif %}">
+            <i class="bi bi-file-earmark-check"></i>
+            <span>PTO Admin</span>
+        </a>
+    </div>
+
+    <div class="sidebar-nav-item">
+        <a href="{% url 'admin_reports' %}" class="sidebar-link {% if 'admin_clients' in request.path %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span>Report Admin</span>
+        </a>
+
+    <div class="sidebar-nav-item">
+        <a href="{% url 'admin_requests' %}" class="sidebar-link {% if 'admin_clients' in request.path %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span>Request Admin</span>
+        </a>
+    
+    <div class="sidebar-nav-item">
+        <a href="{% url 'analytics_dashboard' %}" class="sidebar-link {% if 'analytics' in request.path %}active{% endif %}">
+            <i class="bi bi-graph-up"></i>
+            <span>Analytics</span>
+        </a>
+    </div>
+    {% endif %}
+                    
+                    <div class="sidebar-nav-item mt-4">
+                        <a href="{% url 'profile' %}" class="sidebar-link {% if request.path == '/profile/' %}active{% endif %}">
+                            <i class="bi bi-person"></i>
+                            <span>My Profile</span>
+                        </a>
+                    </div>
+                    
+                    <div class="sidebar-nav-item">
+                        <a href="{% url 'settings' %}" class="sidebar-link {% if request.path == '/settings/' %}active{% endif %}">
+                            <i class="bi bi-gear"></i>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="sidebar-footer">
+                <small>&copy; 2025 Sierra Environmental & Social Services Inc</small>
+            </div>
+        </div>
+        
+        <!-- Main content wrapper -->
+        <div class="main-content-wrapper">
+            <!-- Top navbar -->
+            <!-- Top navbar -->
+            <nav class="top-navbar">
+                <button class="btn btn-link sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="top-navbar-title d-none d-md-block">
+                    <h5 class="mb-0">SESS Admin Portal</h5>
+                </div>
+                
+                <div class="top-navbar-actions">
+                    {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="avatar-sm me-2">
+                                {% if employee.profile_picture %}
+                                    <img src="{{ employee.profile_picture.image.url }}" alt="Profile" class="img-fluid rounded-circle w-100 h-100 object-fit-cover">
+                                {% else %}
+                                    <i class="bi bi-person-circle"></i>
+                                {% endif %}
+                            </div>
+                            <span class="d-none d-md-inline-block">{{ employee.first_name }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <div class="dropdown-item-text">
+                                    <div class="fw-bold">{{ employee.first_name }} {{ employee.last_name }}</div>
+                                    <small class="text-muted">{{ employee.role }}</small>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                <i class="bi bi-person me-2"></i> Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'settings' %}">
+                                <i class="bi bi-gear me-2"></i> Settings
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i> Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-primary">Login</a>
+                    {% endif %}
+                </div>
+            </nav>
+            
+            <style>
+                .avatar-sm {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                    border-radius: 50%;
+                }
+                
+                .avatar-sm i {
+                    font-size: 1.5rem;
+                    color: var(--text-color);
+                }
+            </style>
+            
+            <!-- Main content -->
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const appContainer = document.querySelector('.app-container');
+            
+            sidebarToggle.addEventListener('click', function() {
+                appContainer.classList.toggle('sidebar-open');
+            });
+            
+            sidebarClose.addEventListener('click', function() {
+                appContainer.classList.remove('sidebar-open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 768 && 
+                    appContainer.classList.contains('sidebar-open') && 
+                    !event.target.closest('.sidebar') && 
+                    !event.target.closest('.sidebar-toggle')) {
+                    appContainer.classList.remove('sidebar-open');
+                }
+            });
+            
+            // Handle responsive behavior
+            function handleResize() {
+                if (window.innerWidth >= 768) {
+                    appContainer.classList.add('sidebar-open');
+                } else {
+                    appContainer.classList.remove('sidebar-open');
+                }
+            }
+            
+            // Initial call and resize listener
+            handleResize();
+            window.addEventListener('resize', handleResize);
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+</body>
+</html>
