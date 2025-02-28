@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-63_aa5)8!byrfp6#k4ybjjr$2=+nb$5@)0zflv%ko*2ru3_4d$
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'sess_admin_portal.railway.app', 
+    'sessadmin-production.up.railway.app', 
     '*.railway.app', 
     'localhost', 
     '127.0.0.1',
