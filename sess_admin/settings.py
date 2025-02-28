@@ -31,7 +31,8 @@ ALLOWED_HOSTS = [
     'sess_admin_portal.railway.app', 
     '*.railway.app', 
     'localhost', 
-    '127.0.0.1'
+    '127.0.0.1',
+    'https://sessadmin-production.up.railway.app/',
 ]
 
 # Authentication settings
