@@ -173,8 +173,8 @@ cython_debug/
 # media and static files
 media/
 staticfiles/
-!media/IMG_6899.jpg
-!media/LeonardHeadshot.jpg
+!media/profile_pics/IMG_6899.jpg
+!media/profile_pics/LeonardHeadshot.jpg
 
 # qodo
 .qodo/

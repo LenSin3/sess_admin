@@ -103,12 +103,29 @@ WSGI_APPLICATION = "sess_admin.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Determine the environment
+RAILWAY_ENVIRONMENT = os.environ.get('RAILWAY_ENVIRONMENT', 'local')
+
+if RAILWAY_ENVIRONMENT == 'production':
+    # Railway PostgreSQL configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE'),
+            'USER': os.environ.get('PGUSER'),
+            'PASSWORD': os.environ.get('PGPASSWORD'),
+            'HOST': os.environ.get('PGHOST'),
+            'PORT': os.environ.get('PGPORT', 5432),
+        }
     }
-}
+else:
+    # Local SQLite configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Override database config if DATABASE_URL environment variable exists
 if 'DATABASE_URL' in os.environ:
