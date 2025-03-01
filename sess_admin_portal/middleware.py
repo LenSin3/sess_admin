@@ -13,7 +13,8 @@ class LoginRequiredMiddleware:
         # List of URLs that don't require authentication
         self.exempt_urls = [
             reverse('login'),
-            # Add any other exempt URLs here
+            '/admin/',  # Explicitly add admin URL
+            '/admin/login/',  # Add admin login URL
         ]
     
     def __call__(self, request):
@@ -22,9 +23,9 @@ class LoginRequiredMiddleware:
             current_path = request.path_info
             
             # Check if the current path is exempt
-            if current_path not in self.exempt_urls:
-                # Check for static files and other exempt paths
-                if not current_path.startswith(settings.STATIC_URL) and not current_path.startswith('/admin/'):
+            if not any(exempt_url in current_path for exempt_url in self.exempt_urls):
+                # Check for static files
+                if not current_path.startswith(settings.STATIC_URL):
                     # Redirect to login page with the next parameter
                     return redirect(f"{reverse('login')}?next={current_path}")
         
