@@ -124,7 +124,7 @@ else:
     # Railway PostgreSQL configuration
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ['DATABASE_PUBLIC_URL'],
+            default=os.environ['DATABASE_URL'],
             conn_max_age=600,
             engine='django.db.backends.postgresql'
         )
