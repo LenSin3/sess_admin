@@ -39,9 +39,10 @@ ALLOWED_HOSTS = [
 
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://sessadmin-production.up.railway.app/',
-    'https://*.railway.app'
+    "https://sessadmin-production.up.railway.app",
+    "https://railway.app",
 ]
+
 
 # Authentication settings
 LOGIN_URL = 'login'
