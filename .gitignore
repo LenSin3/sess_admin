@@ -172,6 +172,7 @@ cython_debug/
 
 # media and static files
 media/
+media/profile_pics/
 staticfiles/
 
 # Allow all profile pictures
@@ -180,3 +181,10 @@ staticfiles/
 
 # qodo
 .qodo/
+
+# data dumps
+data_dump.json 
+full_backup.json
+full_backup_utf8.json
+full_backup_fixed.json
+full_backup_clean.json
