@@ -110,7 +110,7 @@ WSGI_APPLICATION = "sess_admin.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-"""
+
 # Check if running locally
 if 'DATABASE_URL' not in os.environ:
     # Local SQLite configuration
@@ -124,24 +124,26 @@ else:
     # Railway PostgreSQL configuration
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+            default=os.environ['DATABASE_PUBLIC_URL'],
             conn_max_age=600,
             engine='django.db.backends.postgresql'
         )
     }
-"""
+
 
 # Railway PostgreSQL configuration
 # Database configuration
 
 
-
+"""
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
         conn_max_age=600
     )
 }
+"""
+
 
 
 """
