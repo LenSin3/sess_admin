@@ -121,17 +121,19 @@ if 'DATABASE_URL' not in os.environ:
         }
     }
 else:
-    # Railway PostgreSQL configuration
+    # Railway PostgreSQL configuration using DATABASE_URL
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', ''),  # Provide a default empty string
-        'USER': os.environ.get('DB_USER', ''),  # Avoid KeyError by using .get()
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # Default to empty string
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # Default to localhost
-        'PORT': os.environ.get('DB_PORT', '5432'),  # Default PostgreSQL port
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,  # Optimize connection pooling
+            engine='django.db.backends.postgresql'
+        )
     }
-}
+
+    # Ensure NAME is set (fallback if DATABASE_URL parsing fails)
+    if not DATABASES['default'].get('NAME'):
+        DATABASES['default']['NAME'] = os.environ.get('DB_NAME', 'railway')  # Default to 'railway'
+
 
 
 
