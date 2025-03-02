@@ -125,13 +125,15 @@ else:
     DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': os.environ['DB_PASSWORD'],
-        'HOST': 'trolley.proxy.rlwy.net',
-        'PORT': '56398',
+        'NAME': os.environ.get('DB_NAME', ''),  # Provide a default empty string
+        'USER': os.environ.get('DB_USER', ''),  # Avoid KeyError by using .get()
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # Default to empty string
+        'HOST': os.environ.get('DB_HOST', 'localhost'),  # Default to localhost
+        'PORT': os.environ.get('DB_PORT', '5432'),  # Default PostgreSQL port
     }
 }
+
+
 
 
 # Railway PostgreSQL configuration
