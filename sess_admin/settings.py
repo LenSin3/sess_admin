@@ -33,6 +33,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "sessadmin-production.up.railway.app",  # Correct hostname
+    "https://sessadmin-production.up.railway.app",
     "localhost",
     "127.0.0.1",
 ]
