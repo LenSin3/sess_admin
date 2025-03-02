@@ -175,8 +175,8 @@ media/
 staticfiles/
 
 # Allow all profile pictures
-!media/profile_pics/
-!media/profile_pics/*
+# !media/profile_pics/
+# !media/profile_pics/*
 
 # qodo
 .qodo/
