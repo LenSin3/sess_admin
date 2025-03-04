@@ -6,10 +6,12 @@ def user_profile(request):
     
     if request.user.is_authenticated:
         try:
-            # Make sure employee is available
-            employee = request.user.employee
-            context['employee'] = employee
-        except:
-            pass
+            # Check if the employee relationship exists first
+            if hasattr(request.user, 'employee'):
+                employee = request.user.employee
+                context['employee'] = employee
+        except Exception as e:
+            # Log the specific exception (this won't show in the response)
+            print(f"Error in user_profile context processor: {str(e)}")
             
     return context

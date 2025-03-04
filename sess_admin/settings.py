@@ -33,7 +33,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     "sessadmin-production.up.railway.app",  # Correct hostname
-    "https://sessadmin-production.up.railway.app",
+    # "https://sessadmin-production.up.railway.app",
     "localhost",
     "127.0.0.1",
 ]
@@ -89,7 +89,7 @@ ROOT_URLCONF = "sess_admin.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -203,6 +203,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+WHITENOISE_USE_FINDERS = True
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type

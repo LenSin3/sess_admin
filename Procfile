@@ -1,1 +1,3 @@
-web: python manage.py migrate && gunicorn sess_admin.wsgi --log-file -
+release: python manage.py migrate  # Run migrations before starting the web process
+web: gunicorn sess_admin.wsgi --bind 0.0.0.0:$PORT --log-file -
+

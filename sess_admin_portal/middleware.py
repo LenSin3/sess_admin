@@ -22,12 +22,19 @@ class LoginRequiredMiddleware:
         if not request.user.is_authenticated:
             current_path = request.path_info
             
-            # Check if the current path is exempt
-            if not any(exempt_url in current_path for exempt_url in self.exempt_urls):
-                # Check for static files
-                if not current_path.startswith(settings.STATIC_URL):
-                    # Redirect to login page with the next parameter
-                    return redirect(f"{reverse('login')}?next={current_path}")
+            # Check if the current path exactly matches exempt URLs
+            # or is a path that should be exempt
+            is_exempt = current_path in self.exempt_urls or \
+                        current_path.startswith('/admin/') or \
+                        current_path.startswith(settings.STATIC_URL) or \
+                        current_path.startswith(settings.MEDIA_URL)
+                        
+            if not is_exempt:
+                # Print debug info (if DEBUG mode)
+                if settings.DEBUG:
+                    print(f"Redirecting unauthenticated user from {current_path} to login")
+                # Redirect to login page with the next parameter
+                return redirect(f"{reverse('login')}?next={current_path}")
         
         response = self.get_response(request)
         return response
