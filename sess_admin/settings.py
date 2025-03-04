@@ -112,7 +112,7 @@ WSGI_APPLICATION = "sess_admin.wsgi.application"
 
 
 # Check if running locally
-if 'DATABASE_URL' not in os.environ:
+if 'DATABASE_PUBLIC_URL' not in os.environ:
     # Local SQLite configuration
     DATABASES = {
         'default': {
@@ -131,8 +131,8 @@ else:
     }
 
     # Ensure NAME is set (fallback if DATABASE_URL parsing fails)
-    if not DATABASES['default'].get('NAME'):
-        DATABASES['default']['NAME'] = os.environ.get('DB_NAME', 'railway')  # Default to 'railway'
+    # if not DATABASES['default'].get('NAME'):
+    #     DATABASES['default']['NAME'] = os.environ.get('DB_NAME', 'railway')  # Default to 'railway'
 
 
 
