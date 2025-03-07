@@ -1,6 +1,14 @@
 from django.urls import path
 from . import views
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ProfilePictureViewSet
+
+router = DefaultRouter()
+router.register(r'profile-pictures', ProfilePictureViewSet)
+
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('timesheet_management/', views.timesheet_management, name='timesheet_management'),
@@ -64,4 +72,7 @@ urlpatterns = [
     path('reports/create/<str:report_type>/', views.create_report, name='create_report'),
     path('reports/<int:report_id>/view/', views.view_report, name='view_report'),
     path('admin-reports/', views.admin_reports, name='admin_reports'),
+    
+    # Include the router's URLs
+    path('', include(router.urls)),
 ]

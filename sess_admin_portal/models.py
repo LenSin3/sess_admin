@@ -50,6 +50,12 @@ class ProfilePicture(models.Model):
     
     def __str__(self):
         return f"Profile picture for {self.content_object}"
+    
+    def image_url(self):
+        """Returns the full URL for the image."""
+        if self.image:
+            return f"{settings.MEDIA_URL}{self.image}"
+        return None
 
 
 

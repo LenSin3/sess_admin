@@ -2400,3 +2400,10 @@ def request_revision(request, report_id):
         return redirect(request.META['HTTP_REFERER'])
     return redirect('admin_reports')
 
+from rest_framework import viewsets
+from .models import ProfilePicture
+from .serializers import ProfilePictureSerializer
+
+class ProfilePictureViewSet(viewsets.ModelViewSet):
+    queryset = ProfilePicture.objects.all()
+    serializer_class = ProfilePictureSerializer

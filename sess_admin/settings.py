@@ -29,7 +29,7 @@ load_dotenv()
 SECRET_KEY = "django-insecure-63_aa5)8!byrfp6#k4ybjjr$2=+nb$5@)0zflv%ko*2ru3_4d$"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "sessadmin-production.up.railway.app",  # Correct hostname
@@ -41,6 +41,7 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://sessadmin-production.up.railway.app",
+    "https://*.up.railway.app",
     "https://railway.app",
 ]
 
@@ -51,8 +52,22 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Media files configuration (for profile pictures)
+# MEDIA_URL = '/media/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+#  MEDIA_ROOT = BASE_DIR / 'media' # commented out for AWS S3 configuration
+#  MEDIA_ROOT = r"C:\Users\Leonard\OneDrive\Desktop\media_files"
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_REGION_NAME = 'us-east-2'  # e.g., 'us-east-1'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+# Media files configuration
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 
 
@@ -69,6 +84,7 @@ INSTALLED_APPS = [
     "smart_selects",
     "whitenoise",
     "whitenoise.runserver_nostatic",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -110,9 +126,9 @@ WSGI_APPLICATION = "sess_admin.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
+"""
 # Check if running locally
-if 'DATABASE_PUBLIC_URL' not in os.environ:
+if 'DATABASE_URL' not in os.environ:
     # Local SQLite configuration
     DATABASES = {
         'default': {
@@ -129,6 +145,9 @@ else:
             engine='django.db.backends.postgresql'
         )
     }
+
+"""
+
 
     # Ensure NAME is set (fallback if DATABASE_URL parsing fails)
     # if not DATABASES['default'].get('NAME'):
@@ -162,6 +181,17 @@ DATABASES = {
 }
 """
 
+# using local Postgres
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sessadmin_db',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',  # Default PostgreSQL port
+    }
+}
 
 
 # Password validation
