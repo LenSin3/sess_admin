@@ -161,14 +161,13 @@ else:
 # Database configuration
 
 
-"""
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
         conn_max_age=600
     )
 }
-"""
+
 
 
 
@@ -181,6 +180,7 @@ DATABASES = {
 }
 """
 
+"""
 # using local Postgres
 DATABASES = {
     'default': {
@@ -192,6 +192,8 @@ DATABASES = {
         'PORT': '5432',  # Default PostgreSQL port
     }
 }
+"""
+
 
 
 # Password validation
