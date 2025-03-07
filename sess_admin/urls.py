@@ -24,7 +24,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("sess_admin_portal.urls")),
-    path('api/', include('sess_admin_portal.urls')),
+    path('api/', include('sess_admin_portal.api_urls')),
 ]
 
 if settings.DEBUG:

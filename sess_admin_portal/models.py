@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.auth.models import User
 import datetime
 from django.utils import timezone
+from django.conf import settings
 
 
 # Create your models here.
