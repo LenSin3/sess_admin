@@ -53,7 +53,7 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Media files configuration (for profile pictures)
 # MEDIA_URL = '/media/'
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'
 #  MEDIA_ROOT = BASE_DIR / 'media' # commented out for AWS S3 configuration
 #  MEDIA_ROOT = r"C:\Users\Leonard\OneDrive\Desktop\media_files"
 
