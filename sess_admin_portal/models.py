@@ -55,7 +55,7 @@ class ProfilePicture(models.Model):
     def image_url(self):
         """Returns the full URL for the image."""
         if self.image:
-            return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{self.image}"
+            return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{self.image.url}"
         return None
 
 
