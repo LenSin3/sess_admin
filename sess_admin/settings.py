@@ -29,7 +29,7 @@ load_dotenv()
 SECRET_KEY = "django-insecure-63_aa5)8!byrfp6#k4ybjjr$2=+nb$5@)0zflv%ko*2ru3_4d$"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "sessadmin-production.up.railway.app",  # Correct hostname
