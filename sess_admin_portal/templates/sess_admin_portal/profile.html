@@ -185,6 +185,22 @@
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('profile_picture').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        
+        if (file.size > maxSize) {
+            alert('File size must be less than 2MB.');
+            event.target.value = ''; // Clear the file input
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            event.target.value = ''; // Clear the file input
+        }
+    });
+</script>
 
 <style>
     .profile-picture-container {

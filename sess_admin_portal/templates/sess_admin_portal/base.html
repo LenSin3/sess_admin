@@ -141,7 +141,7 @@
                     </div>
                     
                     <div class="sidebar-nav-item">
-                        <a href="{% url 'settings' %}" class="sidebar-link {% if request.path == '/settings/' %}active{% endif %}">
+                        <a href="{% url 'user-settings' %}" class="sidebar-link {% if request.path == '/settings/' %}active{% endif %}">
                             <i class="bi bi-gear"></i>
                             <span>Settings</span>
                         </a>
@@ -191,7 +191,7 @@
                             <li><a class="dropdown-item" href="{% url 'profile' %}">
                                 <i class="bi bi-person me-2"></i> Profile
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'settings' %}">
+                            <li><a class="dropdown-item" href="{% url 'user-settings' %}">
                                 <i class="bi bi-gear me-2"></i> Settings
                             </a></li>
                             <li><hr class="dropdown-divider"></li>

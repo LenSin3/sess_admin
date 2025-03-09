@@ -38,10 +38,17 @@ from django.conf import settings
 # ClientProgram
 # Timesheet
 # PTO
-
+from django.conf import settings
+from storages.backends.s3boto3 import S3Boto3Storage
 class ProfilePicture(models.Model):
     """Model for storing profile pictures for employees and clients"""
-    image = models.ImageField(upload_to='profile_pics/')
+    # image = models.ImageField(upload_to='profile_pics/')
+    image = models.ImageField(
+        upload_to='',  # Remove directory prefix here
+        storage=S3Boto3Storage(
+            location='profile_pics'  # Single source of truth for path
+        )
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     # Generic relation to work with both Employee and Client models
@@ -52,11 +59,36 @@ class ProfilePicture(models.Model):
     def __str__(self):
         return f"Profile picture for {self.content_object}"
     
+    """
     def image_url(self):
-        """Returns the full URL for the image."""
+        """'Returns the full URL for the image.'"""
         if self.image:
             return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{self.image.url}"
         return None
+    """
+    
+    
+    def image_url(self):
+        """Handle legacy media/ path and new profile_pics/ path"""
+        try:
+            url = self.image.url
+            
+            # Remove duplicate media/ prefix if exists
+            if url.startswith('https://s3.amazonaws.com/media/'):
+                return url.replace(
+                    'https://s3.amazonaws.com/media/',
+                    f'https://{settings.AWS_S3_CUSTOM_DOMAIN}/profile_pics/'
+                )
+                
+            return url
+        except ValueError:
+            return None
+    
+    def save(self, *args, **kwargs):
+        """Ensure storage is properly initialized"""
+        if not self.image.storage:
+            self.image.storage = S3Boto3Storage()
+        super().save(*args, **kwargs)
 
 
 

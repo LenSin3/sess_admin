@@ -27,7 +27,7 @@ urlpatterns = [
     
     # Profile and settings
     path('profile/', views.profile, name='profile'),
-    path('settings/', views.settings, name='settings'),
+    path('settings/', views.user_settings, name='user-settings'),
     
     # Admin analytics
     path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),

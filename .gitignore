@@ -188,3 +188,12 @@ full_backup.json
 full_backup_utf8.json
 full_backup_fixed.json
 full_backup_clean.json
+
+profile_pics/
+media/profile_pics/
+media/profile_pics/*
+full_backup_without_contenttypes.json
+policy.json
+bucket-policy.json
+test.txt 
+main.py

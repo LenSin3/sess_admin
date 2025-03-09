@@ -10,6 +10,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.contrib import messages
 from datetime import timedelta, date, datetime
+import time
+import os
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
@@ -50,9 +52,11 @@ def logout_view(request):
     messages.success(request, 'You have been successfully logged out.')
     return redirect('login')
 
+
+"""
 @login_required
 def profile(request):
-    """View for employee profile management"""
+    """'View for employee profile management'"""
     employee = get_object_or_404(Employee, user=request.user)
     
     if request.method == 'POST':
@@ -101,9 +105,196 @@ def profile(request):
     }
     
     return render(request, 'sess_admin_portal/profile.html', context)
+"""
+
+#############################################################################
+"""
+from django.core.files.images import get_image_dimensions
+from django.core.exceptions import ValidationError
 
 @login_required
-def settings(request):
+def profile(request):
+    employee = get_object_or_404(Employee, user=request.user)
+    
+    if request.method == 'POST':
+        if 'upload_picture' in request.POST and request.FILES.get('profile_picture'):
+            profile_picture = request.FILES['profile_picture']
+            
+            # Validate file size (2MB limit)
+            if profile_picture.size > 2 * 1024 * 1024:  # 2MB in bytes
+                messages.error(request, 'File size must be less than 2MB.')
+                return redirect('profile')
+            
+            # Validate file type (image)
+            try:
+                width, height = get_image_dimensions(profile_picture)
+                if not width or not height:
+                    raise ValidationError('Invalid image file.')
+            except (ValidationError, AttributeError):
+                messages.error(request, 'Invalid image file.')
+                return redirect('profile')
+            
+            # Delete existing profile picture if any
+            content_type = ContentType.objects.get_for_model(Employee)
+            ProfilePicture.objects.filter(
+                content_type=content_type,
+                object_id=employee.id
+            ).delete()
+            
+            # Create new profile picture
+            profile_pic = ProfilePicture(
+                content_type=content_type,
+                object_id=employee.id,
+                image=profile_picture
+            )
+            profile_pic.save()
+            
+            messages.success(request, 'Profile picture updated successfully!')
+            return redirect('profile')
+    
+    # Get current profile picture
+    content_type = ContentType.objects.get_for_model(Employee)
+    profile_picture = ProfilePicture.objects.filter(
+        content_type=content_type,
+        object_id=employee.id
+    ).first()
+    
+    context = {
+        'employee': employee,
+        'profile_picture': profile_picture
+    }
+    
+    return render(request, 'sess_admin_portal/profile.html', context)
+"""
+
+############################################################################
+from django.core.files.images import get_image_dimensions
+from django.core.exceptions import ValidationError
+
+# views.py
+import logging
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
+from storages.backends.s3boto3 import S3Boto3Storage
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+@login_required
+def profile(request):
+    employee = get_object_or_404(Employee, user=request.user)
+    content_type = ContentType.objects.get_for_model(Employee)
+    
+    # Get current profile picture
+    profile_picture = ProfilePicture.objects.filter(
+        content_type=content_type,
+        object_id=employee.id
+    ).first()
+
+    if request.method == 'POST' and 'upload_picture' in request.POST:
+        profile_picture_file = request.FILES.get('profile_picture')
+        
+        
+        if not profile_picture_file:
+            messages.error(request, 'No file selected')
+            return redirect('profile')
+
+        # Validate file size (2MB limit)
+        if profile_picture_file.size > 2 * 1024 * 1024:
+            messages.error(request, 'File size must be less than 2MB.')
+            return redirect('profile')
+
+        # Validate file type (image)
+        try:
+            width, height = get_image_dimensions(profile_picture_file)
+            if not width or not height:
+                raise ValidationError('Invalid image file.')
+        except (ValidationError, AttributeError) as e:
+            logger.error(f"Invalid image upload: {str(e)}")
+            messages.error(request, 'Invalid image file format.')
+            return redirect('profile')
+
+        try:
+            # Delete existing pictures with S3 cleanup
+            existing_pics = ProfilePicture.objects.filter(
+                content_type=content_type,
+                object_id=employee.id
+            )
+            for pic in existing_pics:
+                try:
+                    if pic.image:
+                        pic.image.storage.delete(pic.image.name)
+                        logger.info(f"Deleted old S3 file: {pic.image.name}")
+                except Exception as delete_error:
+                    logger.error(f"Error deleting old file: {str(delete_error)}")
+            existing_pics.delete()
+
+            # Generate unique filename
+            timestamp = int(time.time())
+            file_ext = os.path.splitext(profile_picture_file.name)[1]
+            safe_filename = f"employee_{employee.id}_{timestamp}{file_ext}"
+
+            # Create new profile picture instance
+            new_pic = ProfilePicture(
+                content_type=content_type,
+                object_id=employee.id
+            )
+
+            # Save directly to S3 with progress monitoring
+            s3_storage = S3Boto3Storage()
+            new_pic.image.save(
+                safe_filename,
+                profile_picture_file,
+                save=False  # Don't save model until S3 upload confirmed
+            )
+            
+
+            # Verify S3 upload success
+            if not s3_storage.exists(new_pic.image.name):
+                raise RuntimeError("S3 upload verification failed")
+
+            # Now save the database record
+            new_pic.save()
+            
+           
+            
+            # Update profile picture reference
+            profile_picture = new_pic
+            
+            messages.success(request, 'Profile picture updated successfully!')
+            logger.info(f"Successfully uploaded to S3: {new_pic.image.name}")
+             # In your view after upload
+            print("Uploaded file path:", new_pic.image.name)
+            print("Full URL:", new_pic.image.url)
+
+        except Exception as e:
+            logger.error(f"S3 upload failed: {str(e)}", exc_info=True)
+            messages.error(request, 'Failed to upload profile picture. Please try again.')
+            
+            # Cleanup failed upload
+            if 'new_pic' in locals() and hasattr(new_pic, 'image'):
+                try:
+                    s3_storage.delete(new_pic.image.name)
+                    logger.info(f"Cleaned up failed upload: {new_pic.image.name}")
+                except Exception as cleanup_error:
+                    logger.error(f"Cleanup error: {str(cleanup_error)}")
+            
+            return redirect('profile')
+
+    context = {
+        'employee': employee,
+        'profile_picture': profile_picture,
+        'aws_storage_bucket': settings.AWS_STORAGE_BUCKET_NAME,
+        'aws_region': settings.AWS_S3_REGION_NAME
+    }
+    
+    return render(request, 'sess_admin_portal/profile.html', context)
+
+#############################################################################
+
+@login_required
+def user_settings(request):
     """View for user account settings"""
     if request.method == 'POST':
         # Handle password change
@@ -2399,11 +2590,87 @@ def request_revision(request, report_id):
     if 'HTTP_REFERER' in request.META:
         return redirect(request.META['HTTP_REFERER'])
     return redirect('admin_reports')
-
+ 
+############################################################   
+"""
 from rest_framework import viewsets
 from .models import ProfilePicture
 from .serializers import ProfilePictureSerializer
+from rest_framework import serializers
+from rest_framework import serializers
 
 class ProfilePictureViewSet(viewsets.ModelViewSet):
     queryset = ProfilePicture.objects.all()
     serializer_class = ProfilePictureSerializer
+
+    def perform_create(self, serializer):
+        # Save the uploaded file to S3
+        serializer.save()
+"""      
+##################################################################
+
+from django.contrib.contenttypes.models import ContentType
+from rest_framework import viewsets
+from .models import ProfilePicture
+from .serializers import ProfilePictureSerializer
+from rest_framework import serializers
+
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import ValidationError  # Changed to DRF's ValidationError
+
+class ProfilePictureViewSet(viewsets.ModelViewSet):
+    queryset = ProfilePicture.objects.all()
+    serializer_class = ProfilePictureSerializer
+
+    def perform_create(self, serializer):
+        content_type_id = self.request.data.get('content_type')
+        object_id = self.request.data.get('object_id')
+        
+        if not content_type_id or not object_id:
+            raise ValidationError("content_type and object_id are required.")  # DRF's error
+
+        # Validate that the content_type is for allowed models (e.g., Employee/Client)
+        allowed_models = ['employee', 'client']  # Lowercase model names
+        content_type = ContentType.objects.get_for_id(content_type_id)
+        
+        if content_type.model not in allowed_models:
+            raise ValidationError("Invalid content_type. Allowed: Employee or Client.") 
+        
+        serializer.save(
+            content_type=ContentType.objects.get_for_id(content_type_id),
+            object_id=object_id
+        )
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.contrib.admin.models import LogEntry
+from rest_framework import serializers
+
+class LogEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LogEntry
+        fields = '__all__'
+
+class LogEntryView(APIView):
+    def get(self, request):
+        log_entries = LogEntry.objects.all()
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response(serializer.data)
+    
+    
+
+from storages.backends.s3boto3 import S3Boto3Storage
+
+def get_presigned_url(self):
+    return S3Boto3Storage().url(
+        self.image.name,
+        parameters={'ResponseContentDisposition': 'inline'}
+    )
