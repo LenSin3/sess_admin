@@ -75,15 +75,19 @@
     </ul>
 </div>
 
-<!-- Client Info Card -->
+<!-- Client Info Card with Profile Picture Button -->
 {% if client %}
 <div class="card mb-4">
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row">
             <div class="client-avatar bg-primary rounded-circle me-md-4 mb-3 mb-md-0">
-                <i class="bi bi-person-fill"></i>
+                {% if client.profile_picture %}
+                    <img src="{{ client.profile_picture.image.url }}" alt="Client" class="img-fluid rounded-circle w-100 h-100 object-fit-cover">
+                {% else %}
+                    <i class="bi bi-person-fill"></i>
+                {% endif %}
             </div>
-            <div>
+            <div class="flex-grow-1">
                 <h4 class="card-title mb-1">{{ client.first_name }} {{ client.last_name }}</h4>
                 <p class="text-muted mb-2">Client ID: SESS-{{ client.id }}</p>
                 <div class="d-flex flex-wrap gap-2">
@@ -95,6 +99,11 @@
                     {% endif %}
                     <span class="badge bg-secondary">Enrolled: {{ client.onboarding_date|date:"M d, Y" }}</span>
                 </div>
+            </div>
+            <div class="ms-md-auto mt-3 mt-md-0">
+                <a href="{% url 'client_profile_picture' client.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-camera me-1"></i> Update Photo
+                </a>
             </div>
         </div>
     </div>

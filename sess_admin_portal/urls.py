@@ -70,4 +70,7 @@ urlpatterns = [
     path('reports/<int:report_id>/view/', views.view_report, name='view_report'),
     path('admin-reports/', views.admin_reports, name='admin_reports'),
     
+    # Add this to your urlpatterns in sess_admin_portal/urls.py
+    path('client/<int:client_id>/profile-picture/', views.client_profile_picture, name='client_profile_picture'),
+    
 ]

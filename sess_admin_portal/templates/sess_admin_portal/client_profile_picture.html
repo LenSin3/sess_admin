@@ -1,0 +1,109 @@
+{% extends 'sess_admin_portal/base.html' %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Client Profile Picture</h2>
+        <p class="text-muted mb-0">Update profile picture for {{ client.first_name }} {{ client.last_name }}</p>
+    </div>
+    <div>
+        <a href="{% url 'client_management' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Client
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Update Client Profile Picture</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="profile-picture-container">
+                        {% if profile_picture %}
+                            <img src="{{ profile_picture.image.url }}" alt="Client Profile Picture" class="img-fluid rounded-circle profile-picture">
+                        {% else %}
+                            <div class="profile-placeholder rounded-circle bg-primary">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <p class="mt-3 text-muted">Current profile picture for {{ client.first_name }} {{ client.last_name }}</p>
+                </div>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="profile_picture" class="form-label">Select New Image</label>
+                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*" required>
+                        <div class="form-text">
+                            Recommended size: 400x400 pixels. Max file size: 2MB.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'client_management' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Profile Picture</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-picture-container {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        border-radius: 50%;
+    }
+    
+    .profile-picture {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+    }
+</style>
+
+<script>
+    document.getElementById('profile_picture').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        
+        if (file.size > maxSize) {
+            alert('File size must be less than 2MB.');
+            event.target.value = ''; // Clear the file input
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            event.target.value = ''; // Clear the file input
+        }
+    });
+</script>
+{% endblock %}

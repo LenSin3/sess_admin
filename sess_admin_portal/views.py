@@ -53,12 +53,18 @@ def logout_view(request):
     return redirect('login')
 
 
-"""
 @login_required
 def profile(request):
-    """'View for employee profile management'"""
+    """View for employee profile management"""
     employee = get_object_or_404(Employee, user=request.user)
+    content_type = ContentType.objects.get_for_model(Employee)
     
+    # Get current profile picture
+    profile_picture = ProfilePicture.objects.filter(
+        content_type=content_type,
+        object_id=employee.id
+    ).first()
+
     if request.method == 'POST':
         # Handle form submission for profile updates
         if 'update_profile' in request.POST:
@@ -69,35 +75,55 @@ def profile(request):
             
             messages.success(request, 'Profile updated successfully!')
             return redirect('profile')
-            
+        
         # Handle profile picture upload
         if 'upload_picture' in request.POST and request.FILES.get('profile_picture'):
-            # Get ContentType for Employee model
-            content_type = ContentType.objects.get_for_model(Employee)
+            profile_picture_file = request.FILES.get('profile_picture')
             
-            # Delete existing profile picture if any
-            ProfilePicture.objects.filter(
-                content_type=content_type,
-                object_id=employee.id
-            ).delete()
-            
-            # Create new profile picture
-            profile_pic = ProfilePicture(
-                content_type=content_type,
-                object_id=employee.id,
-                image=request.FILES['profile_picture']
-            )
-            profile_pic.save()
-            
-            messages.success(request, 'Profile picture updated successfully!')
-            return redirect('profile')
-    
-    # Get current profile picture
-    content_type = ContentType.objects.get_for_model(Employee)
-    profile_picture = ProfilePicture.objects.filter(
-        content_type=content_type,
-        object_id=employee.id
-    ).first()
+            # Validate file size (2MB limit)
+            if profile_picture_file.size > 2 * 1024 * 1024:
+                messages.error(request, 'File size must be less than 2MB.')
+                return redirect('profile')
+
+            try:
+                # Delete existing profile pictures if any
+                existing_pics = ProfilePicture.objects.filter(
+                    content_type=content_type,
+                    object_id=employee.id
+                )
+                
+                for pic in existing_pics:
+                    # Only try to delete the file if it exists
+                    if pic.image and hasattr(pic.image, 'name') and pic.image.name:
+                        try:
+                            pic.image.delete(save=False)
+                        except Exception as e:
+                            # Log but continue if we can't delete old file
+                            print(f"Error deleting old file: {str(e)}")
+                
+                existing_pics.delete()
+
+                # Generate unique filename
+                timestamp = int(time.time())
+                file_ext = os.path.splitext(profile_picture_file.name)[1].lower()
+                safe_filename = f"employee_{employee.id}_{timestamp}{file_ext}"
+
+                # Create new profile picture instance
+                new_pic = ProfilePicture(
+                    content_type=content_type,
+                    object_id=employee.id
+                )
+                
+                # Save the file directly
+                new_pic.image.save(safe_filename, profile_picture_file, save=True)
+                
+                messages.success(request, 'Profile picture updated successfully!')
+                return redirect('profile')
+                
+            except Exception as e:
+                print(f"Upload error: {str(e)}")
+                messages.error(request, f'Error uploading profile picture: {str(e)}')
+                return redirect('profile')
     
     context = {
         'employee': employee,
@@ -105,7 +131,100 @@ def profile(request):
     }
     
     return render(request, 'sess_admin_portal/profile.html', context)
-"""
+
+@login_required
+def client_profile_picture(request, client_id):
+    """View for uploading client profile pictures"""
+    # Ensure the user has access to this client
+    employee = get_object_or_404(Employee, user=request.user)
+    
+    # For regular employees, restrict to assigned client
+    if not (request.user.is_staff or request.user.is_superuser):
+        if str(employee.client.id) != str(client_id):
+            messages.error(request, "You do not have permission to modify this client's profile.")
+            return redirect('client_management')
+    
+    client = get_object_or_404(Client, id=client_id)
+    content_type = ContentType.objects.get_for_model(Client)
+    
+    # Get current profile picture
+    profile_picture = ProfilePicture.objects.filter(
+        content_type=content_type,
+        object_id=client.id
+    ).first()
+    
+    if request.method == 'POST':
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            profile_picture_file = request.FILES.get('profile_picture')
+            
+            # Validate file size (2MB limit)
+            if profile_picture_file.size > 2 * 1024 * 1024:
+                messages.error(request, 'File size must be less than 2MB.')
+                return redirect('client_profile_picture', client_id=client_id)
+
+            try:
+                # Delete existing profile pictures if any
+                existing_pics = ProfilePicture.objects.filter(
+                    content_type=content_type,
+                    object_id=client.id
+                )
+                
+                for pic in existing_pics:
+                    if pic.image and hasattr(pic.image, 'name') and pic.image.name:
+                        try:
+                            pic.image.delete(save=False)
+                        except Exception as e:
+                            print(f"Error deleting old file: {str(e)}")
+                
+                existing_pics.delete()
+
+                # Generate unique filename
+                timestamp = int(time.time())
+                file_ext = os.path.splitext(profile_picture_file.name)[1].lower()
+                safe_filename = f"client_{client.id}_{timestamp}{file_ext}"
+
+                # Create new profile picture instance
+                new_pic = ProfilePicture(
+                    content_type=content_type,
+                    object_id=client.id
+                )
+                
+                # Save the file directly
+                storage = S3Boto3Storage(location='profile_pics')
+                
+                # Handle uploaded file (manually if needed)
+                try:
+                    # Try direct save
+                    new_pic.image.save(safe_filename, profile_picture_file, save=True)
+                except Exception as e:
+                    print(f"Direct save failed: {str(e)}")
+                    
+                    # Try manual upload
+                    try:
+                        file_path = storage.save(safe_filename, profile_picture_file)
+                        new_pic.image.name = file_path
+                        new_pic.save()
+                    except Exception as e2:
+                        print(f"Manual upload failed: {str(e2)}")
+                        raise e2
+                
+                messages.success(request, 'Client profile picture updated successfully!')
+                return redirect('client_management')
+                
+            except Exception as e:
+                import traceback
+                print(f"Upload error: {str(e)}")
+                print(traceback.format_exc())
+                messages.error(request, f'Error uploading profile picture: {str(e)}')
+    
+    context = {
+        'client': client,
+        'profile_picture': profile_picture
+    }
+    
+    return render(request, 'sess_admin_portal/client_profile_picture.html', context)
+
 
 #############################################################################
 """
@@ -168,6 +287,7 @@ def profile(request):
 """
 
 ############################################################################
+"""
 from django.core.files.images import get_image_dimensions
 from django.core.exceptions import ValidationError
 
@@ -291,6 +411,9 @@ def profile(request):
     
     return render(request, 'sess_admin_portal/profile.html', context)
 
+"""
+
+
 #############################################################################
 
 @login_required
@@ -347,7 +470,7 @@ def is_admin_or_superuser(user):
 @login_required
 @user_passes_test(is_admin_or_superuser)
 def analytics_dashboard(request):
-    """Admin analytics dashboard view"""
+    """Admin analytics dashboard view with real data"""
     # Get counts of clients
     total_clients = Client.objects.count()
     active_clients = Client.objects.filter(active=True).count()
@@ -393,8 +516,9 @@ def analytics_dashboard(request):
             time_in_dt = datetime.combine(timesheet.date, timesheet.time_in)
             time_out_dt = datetime.combine(timesheet.date, timesheet.time_out)
             delta = time_out_dt - time_in_dt
-            hours = delta.total_seconds() / 3600.0  # Convert seconds to hours
-            hours_logged += hours
+            if delta.total_seconds() > 0:  # Ensure positive hours
+                hours = delta.total_seconds() / 3600.0  # Convert seconds to hours
+                hours_logged += hours
     
     # Average hours per employee
     if active_employees > 0:
@@ -440,14 +564,21 @@ def analytics_dashboard(request):
         status=TimesheetSubmission.STATUS_PENDING
     ).count()
     
-    in_progress_count = 0  # Would need logic to determine employees who have started but not submitted
+    # Count employees who have started timesheets but haven't submitted
+    in_progress_employee_ids = Timesheet.objects.filter(
+        date__gte=pay_period_start,
+        date__lte=pay_period_end,
+        submission__isnull=True
+    ).values_list('employee_id', flat=True).distinct()
+    
+    in_progress_count = len(in_progress_employee_ids)
     
     # Calculate not started (employees who haven't submitted)
     submitted_employee_ids = submissions.values_list('employee_id', flat=True)
     not_started_count = Employee.objects.filter(
         active=True
     ).exclude(
-        id__in=submitted_employee_ids
+        id__in=list(submitted_employee_ids) + list(in_progress_employee_ids)
     ).count()
     
     # Calculate submission rate
@@ -462,50 +593,67 @@ def analytics_dashboard(request):
     else:
         pending_percentage = 0
     
-    # Sample system activities
-    # In a real app, this would come from an activity log model
-    system_activities = [
-        {
-            'title': 'New Employee Added',
-            'description': 'Emily Johnson was added as a Caregiver',
-            'user': 'Admin',
-            'time': '2 hours ago',
-            'icon': 'bi-person-plus',
-            'icon_class': 'bg-success-light'
-        },
-        {
-            'title': 'Client Information Updated',
-            'description': 'Contact information updated for John Smith',
-            'user': 'Sarah Davis',
-            'time': '4 hours ago',
-            'icon': 'bi-pencil',
-            'icon_class': 'bg-primary-light'
-        },
-        {
-            'title': 'Timesheet Approved',
-            'description': 'Timesheet for May 1-15 approved',
-            'user': 'Admin',
-            'time': '1 day ago',
-            'icon': 'bi-check-circle',
-            'icon_class': 'bg-success-light'
-        },
-        {
-            'title': 'New Regional Center Added',
-            'description': 'East Valley Regional Center was added',
-            'user': 'Admin',
-            'time': '2 days ago',
-            'icon': 'bi-building',
+    # Recent system activities
+    system_activities = []
+    
+    # Get recent admin logs
+    admin_logs = LogEntry.objects.all().order_by('-action_time')[:5]
+    for log in admin_logs:
+        activity = {
+            'title': f"{log.get_action_flag_display()} Action",
+            'description': log.object_repr,
+            'user': log.user.get_full_name() if log.user.get_full_name() else log.user.username,
+            'time': log.action_time.strftime("%b %d, %Y %H:%M"),
+            'icon': 'bi-pencil' if log.action_flag == 2 else 'bi-plus-circle' if log.action_flag == 1 else 'bi-trash',
+            'icon_class': 'bg-primary-light' if log.action_flag == 2 else 'bg-success-light' if log.action_flag == 1 else 'bg-danger-light'
+        }
+        system_activities.append(activity)
+    
+    # Get recent reports
+    recent_reports = DailyReport.objects.all().order_by('-date', '-time')[:5]
+    for report in recent_reports:
+        activity = {
+            'title': 'Daily Report Added',
+            'description': f"Report for {report.client.first_name} {report.client.last_name}",
+            'user': f"{report.employee.first_name} {report.employee.last_name}",
+            'time': report.date.strftime("%b %d, %Y"),
+            'icon': 'bi-journal-text',
             'icon_class': 'bg-info-light'
-        },
-        {
-            'title': 'System Maintenance',
-            'description': 'Database backup completed',
-            'user': 'System',
-            'time': '3 days ago',
-            'icon': 'bi-gear',
+        }
+        system_activities.append(activity)
+    
+    # Get recent PTO requests
+    recent_ptos = PTO.objects.all().order_by('-submitted_at')[:5]
+    for pto in recent_ptos:
+        activity = {
+            'title': 'PTO Request',
+            'description': f"{pto.pto_type} request ({pto.status})",
+            'user': f"{pto.employee.first_name} {pto.employee.last_name}",
+            'time': pto.submitted_at.strftime("%b %d, %Y"),
+            'icon': 'bi-calendar-minus',
             'icon_class': 'bg-warning-light'
         }
-    ]
+        system_activities.append(activity)
+    
+    # Get recent appointments
+    recent_appointments = Appointment.objects.all().order_by('-appointment_date')[:5]
+    for apt in recent_appointments:
+        activity = {
+            'title': 'Appointment Scheduled',
+            'description': f"{apt.appointment_reason} for {apt.client.first_name} {apt.client.last_name}",
+            'user': 'System',
+            'time': apt.appointment_date.strftime("%b %d, %Y"),
+            'icon': 'bi-calendar-event',
+            'icon_class': 'bg-success-light'
+        }
+        system_activities.append(activity)
+    
+    # Sort all activities by time (most recent first)
+    system_activities = sorted(
+        system_activities, 
+        key=lambda x: datetime.strptime(x['time'], "%b %d, %Y") if len(x['time']) <= 11 else datetime.strptime(x['time'], "%b %d, %Y %H:%M"),
+        reverse=True
+    )[:5]  # Get top 5 most recent
     
     context = {
         'total_clients': total_clients,
