@@ -69,10 +69,10 @@ AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-2')
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
 AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 # AWS_DEFAULT_ACL = 'public-read'  # Make files public by default
-AWS_QUERYSTRING_AUTH = False  # Don't add query string auth to URLs
+AWS_QUERYSTRING_AUTH = True  # Don't add query string auth to URLs
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False  # Don't overwrite files with the same name
-
+AWS_S3_EXPIRE_SECONDS = 600  # 10 minutes
 # Media files
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'

@@ -2822,3 +2822,14 @@ def get_presigned_url(self):
         self.image.name,
         parameters={'ResponseContentDisposition': 'inline'}
     )
+    
+# views.py
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.core.files.storage import default_storage
+from urllib.parse import urlparse
+
+@login_required
+def secure_file(request, file_path):
+    presigned_url = default_storage.url(file_path)
+    return HttpResponseRedirect(presigned_url)
