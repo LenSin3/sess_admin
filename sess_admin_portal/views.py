@@ -2833,3 +2833,16 @@ from urllib.parse import urlparse
 def secure_file(request, file_path):
     presigned_url = default_storage.url(file_path)
     return HttpResponseRedirect(presigned_url)
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+
+def get_profile_pic(request, profile_pic_id):
+    """
+    API endpoint to return a signed URL for an authenticated user's profile picture.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    profile_pic = get_object_or_404(ProfilePicture, id=profile_pic_id)
+    return JsonResponse({'url': profile_pic.image_url()})

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.auth.models import User
 import datetime
+import boto3
 from django.utils import timezone
 from django.conf import settings
 
@@ -57,11 +58,39 @@ class ProfilePicture(models.Model):
     def __str__(self):
         return f"Profile picture for {self.content_object}"
     
+    def generate_presigned_url(self, expiration=3600):
+        """Generates a temporary signed URL for accessing the image."""
+        if not self.image:
+            return None
+        
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        )
+        
+        try:
+            url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME, 'Key': self.image.name},
+                ExpiresIn=expiration  # URL expires in 1 hour
+            )
+            return url
+        except Exception as e:
+            print(f"Error generating signed URL: {e}")
+            return None
+    """
     def image_url(self):
-        """Returns the full URL for the image."""
+        """'Returns the full URL for the image.'"""
         if self.image:
             return self.image.url
         return None
+    """
+    
+    
+    def image_url(self):
+        """Returns a signed URL for the image if stored in S3."""
+        return self.generate_presigned_url()
 
 
 
